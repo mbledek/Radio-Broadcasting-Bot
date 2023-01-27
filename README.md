@@ -14,3 +14,5 @@ Here's a list of all of its commands:
  - TOKEN is your Discord bot token
  - SPOTIPY_CLIENT_ID and SPOTIPY_CLIENT_SECRET are your client id and client secret from Spotify's API
  - admin_role is the ID of an admin role from your server
+ - spotify_random_playlist is the link to a spotify playlist from which the bot will add random songs (/losowe)
+
