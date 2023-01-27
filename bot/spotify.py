@@ -53,7 +53,7 @@ def current_playing():
         return ""
 
 
-def queue_random(id="0jH70qZn1b4pBva0Xj0rk6"):
+def queue_random(id=spotify_random_playlist):
     tracks = "**Dodałem:**\n"
     playlist = sp.playlist(id)
     length = len(playlist["tracks"]["items"])
