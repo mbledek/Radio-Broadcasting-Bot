@@ -50,10 +50,10 @@ def current_playing():
         artist = ", ".join(artist) + ": "
         return str(artist + track_name)
     except TypeError:
-        return ""
+        return "Nie gramy aktualnie żadnej piosenki..."
 
 
-def queue_random(id=spotify_random_playlist):
+def queue_random(id="0jH70qZn1b4pBva0Xj0rk6"):
     tracks = "**Dodałem:**\n"
     playlist = sp.playlist(id)
     length = len(playlist["tracks"]["items"])

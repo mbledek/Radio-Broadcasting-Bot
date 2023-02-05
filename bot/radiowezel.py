@@ -70,3 +70,13 @@ class Radio(commands.Cog):
                 await odpowiedz.edit_original_response(content=queue_random())
             except spotipy.exceptions.SpotifyException:
                 await ctx.response.send_message(f"Sorry, nasz Spotify jest wyłączony...")
+
+    @commands.slash_command()
+    async def clear(self, ctx):
+        if admin_role not in list(map(lambda x: x.id, ctx.user.roles)):
+            await ctx.response.send_message(content="Nie masz uprawnień do użycia tej komendy!", ephemeral=True)
+        else:
+            await ctx.response.send_message(content="Już czyszczę...", ephemeral=True)
+
+            with open(os.path.join(path, "Spotify_list.pkl"), "wb") as f:
+                pickle.dump([], f)
