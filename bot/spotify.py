@@ -50,7 +50,7 @@ def current_playing():
         artist = ", ".join(artist) + ": "
         return str(artist + track_name)
     except TypeError:
-        return "Nie gramy aktualnie żadnej piosenki..."
+        return ""
 
 
 def queue_random(id="0jH70qZn1b4pBva0Xj0rk6"):

@@ -17,8 +17,11 @@ class Radio(commands.Cog):
     async def grane(self, ctx):
         try:
             track = current_playing()
-            logger.info(f"Teraz gramy: {track}")
-            await ctx.response.send_message(f"**Teraz gramy:** {track}")
+            if not track == "":
+                logger.info(f"Teraz gramy: {track}")
+                await ctx.response.send_message(f"**Teraz gramy:** {track}")
+            else:
+                await ctx.response.send_message("Nie gramy teraz żadnej piosenki...", ephemeral=True)
         except spotipy.exceptions.SpotifyException:
             await ctx.response.send_message(f"Sorry, nasz Spotify jest wyłączony...")
 
