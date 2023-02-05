@@ -8,6 +8,7 @@ Here's a list of all of its commands:
  - `/dodaj <id>` - adds a song to queue (given that you're an admin)
  - `/zestawienie <timespan>` - shows top 10 tracks in a given timespan
  - `/losowe` - adds 3 random songs from a playlist
+ - `/clear` - clears the list of today's played tracks
  
  # Configuration
  Remember to edit the config.py file:
