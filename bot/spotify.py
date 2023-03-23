@@ -131,3 +131,61 @@ def spotify_list():
         time.sleep(30)
 
 
+def search_tracks(query: str):
+    search_result = sp.search(q=query, type="track", limit=5)
+
+    track_info = []
+    id_list = []
+    for track in search_result['tracks']['items']:
+        index = search_result['tracks']['items'].index(track)
+        artist_name = track['artists'][0]['name']
+        song_name = track['name']
+        track_info.append(f"{index+1}. {artist_name} - {song_name}")
+        id_list.append(track['id'])
+
+    return track_info, id_list
+
+
+def divide_chunks(list, length):
+    # looping till length l
+    for i in range(0, len(list), length):
+        yield list[i:i + length]
+
+
+def new_recommended_playlist(genres: str, explicit: bool):
+    playlist_name = genres
+    genres = genres.split(", ")
+    track_ids = []
+
+    for genre in genres:
+        results = sp.search(q=f"genre:{genre}", type="track", limit=50)
+        tracks = results["tracks"]["items"]
+
+        # Loop over each track and check if it has explicit content
+        for track in tracks:
+            track_id = track["id"]
+            track_info = sp.track(track_id)
+            if not (track_info["explicit"] is True and explicit is False):
+                track_ids.append(track_id)
+
+    # Shuffle the track IDs to randomize the order of the playlist
+    random.shuffle(track_ids)
+
+    # Create a new playlist on Spotify
+    playlist_description = "A long playlist of appropriate tracks for schoolwide radio broadcasting"
+    user_id = sp.current_user()["id"]
+    new_playlist = sp.user_playlist_create(user_id, playlist_name, public=True, description=playlist_description)
+    # print(new_playlist['id'])
+
+    # Add the tracks to the new playlist
+    length = len(track_ids)
+    track_ids = divide_chunks(track_ids, 50)
+    for item in track_ids:
+        sp.playlist_add_items(new_playlist["id"], item)
+
+    # Print the number of tracks in the playlist
+    print(f"Generated playlist with {length} tracks")
+
+    # Print the link to the new playlist on Spotify
+    playlist_link = f"https://open.spotify.com/playlist/{new_playlist['id']}"
+    return f"View the new playlist at: {playlist_link}"
