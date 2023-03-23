@@ -83,3 +83,39 @@ class Radio(commands.Cog):
 
             with open(os.path.join(path, "Spotify_list.pkl"), "wb") as f:
                 pickle.dump([], f)
+ 
+    @commands.slash_command()
+    async def search(self, ctx, query: str):
+        if admin_role not in list(map(lambda x: x.id, ctx.user.roles)):
+            await ctx.response.send_message(content="Nie masz uprawnień do użycia tej komendy!", ephemeral=True)
+        else:
+            odpowiedz = await ctx.response.send_message("Czekaj sekundę...")
+
+            track_info, id_list = search_tracks(query)
+
+            await odpowiedz.edit_original_response(content=f"O którą z tych piosenek Ci chodziło?: ")
+            await ctx.channel.send("\n".join(track_info))
+
+            def check(m):
+                return m.author.id == ctx.author.id and 1 <= int(m.content) <= 5
+
+            try:
+                wanted_index = await self.bot.wait_for("message", check=check, timeout=30.0)
+                wanted_index = wanted_index.content
+            except asyncio.TimeoutError:
+                await ctx.channel.send("Timed out... Please start the process again")
+                return
+
+            await ctx.channel.send("Dzięki, już dodaję...")
+            queue_id(id_list[int(int(wanted_index)-1)])
+
+    @commands.slash_command()
+    async def random_playlist(self, ctx, query: str, explicit: bool):
+        if admin_role not in list(map(lambda x: x.id, ctx.user.roles)):
+            await ctx.response.send_message(content="Nie masz uprawnień do użycia tej komendy!", ephemeral=True)
+        else:
+            odpowiedz = await ctx.response.send_message("Czekaj sekundę...")
+
+            link = new_recommended_playlist(query, explicit)
+
+            await odpowiedz.edit_original_response(content=link)
