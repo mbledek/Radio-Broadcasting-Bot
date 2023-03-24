@@ -23,6 +23,7 @@ class Radiowezel(commands.Bot, ABC):
 
     async def on_ready(self):
         logger.info(f'We have logged in as {self.user}')
+        await self.change_presence(activity=discord.Game(name="https://github.com/mbledek"))
         spotify_list_thread = threading.Thread(target=spotify_list)
         spotify_list_thread.start()
 
