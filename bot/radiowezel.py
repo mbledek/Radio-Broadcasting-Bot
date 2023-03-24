@@ -58,7 +58,8 @@ class Radio(commands.Cog):
 
     @commands.slash_command(description="Sprawdź jakich piosenek słuchamy najczęściej")
     async def zestawienie(self, ctx,
-                          timespan: discord.Option(str, choices=["short_term", "medium_term", "long_term"])):
+                          timespan: discord.Option(str, "Przedział czasowy",
+                                                   choices=["short_term", "medium_term", "long_term"])):
         await ctx.response.send_message(content=top_100(10, timespan))
 
     @commands.slash_command(description="Dodaj 3 losowe piosenki z naszej playlisty")
