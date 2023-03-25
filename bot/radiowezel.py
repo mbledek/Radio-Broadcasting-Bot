@@ -33,7 +33,8 @@ class Radio(commands.Cog):
             odpowiedz = await ctx.response.send_message("Czekaj sekundę...")
             final = ""
             for item in songs_list:
-                final = f"{final}{item[0]} - {item[1]}\n"
+                if len(f"{item[0]} - {item[1]}") > 5:
+                    final = f"{final}{item[0]} - {item[1]}\n"
 
             final = split_str(final, 1900)
             await odpowiedz.edit_original_response(content="**Dzisiaj zagraliśmy:**")
@@ -124,3 +125,40 @@ class Radio(commands.Cog):
             link = new_recommended_playlist(gatunki, explicit)
 
             await odpowiedz.edit_original_response(content=link)
+    
+    @commands.slash_command(description="Wyślij nam propozycję piosenki")
+    async def propozycja(self, ctx,
+                         query: discord.Option(str, "Tytuł (i najlepiej wykonawca) piosenki którą chcesz dodać")):
+        odpowiedz = await ctx.response.send_message("Czekaj sekundę...")
+
+        track_info, id_list = search_tracks(query)
+
+        await odpowiedz.edit_original_response(content=f"O którą z tych piosenek Ci chodziło?: ")
+        await ctx.channel.send("\n".join(track_info))
+
+        def check(m):
+            return m.author.id == ctx.author.id and 1 <= int(m.content) <= 5
+
+        try:
+            wanted_index = await self.bot.wait_for("message", check=check, timeout=30.0)
+            wanted_index = wanted_index.content
+        except asyncio.TimeoutError:
+            await ctx.channel.send("Timed out... Please start the process again")
+            return
+
+        track_info = track_info[int(int(wanted_index)-1)].split(". ")[1]
+        if explicit_or_not(id_list[int(int(wanted_index)-1)]):
+            track_info = f"{track_info} - Explicit"
+        output = f"**Propozycja od {ctx.author.mention}:** {track_info} - " \
+                 f"https://open.spotify.com/track/{id_list[int(int(wanted_index)-1)]}"
+        await ctx.channel.send("Dzięki, już przesłałem moderacji")
+        await self.bot.get_channel(proposition_channel).send(output)
+
+    @commands.slash_command(description="Pomiń piosenkę")
+    async def pomin(self, ctx):
+        if admin_role not in list(map(lambda x: x.id, ctx.user.roles)):
+            await ctx.response.send_message(content="Nie masz uprawnień do użycia tej komendy!", ephemeral=True)
+        else:
+            odpowiedz = await ctx.response.send_message("Czekaj sekundę...")
+
+            await odpowiedz.edit_original_response(content=skip_song())
