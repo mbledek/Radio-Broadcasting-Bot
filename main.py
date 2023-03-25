@@ -21,11 +21,24 @@ class Radiowezel(commands.Bot, ABC):
         self.add_cog(Radio(self))
         self.run(TOKEN)
 
-    async def on_ready(self):
-        logger.info(f'We have logged in as {self.user}')
-        await self.change_presence(activity=discord.Game(name="https://github.com/mbledek"))
-        spotify_list_thread = threading.Thread(target=spotify_list)
-        spotify_list_thread.start()
+        async def on_ready(self):
+            logger.info(f'We have logged in as {self.user}')
+            spotify_list_thread = threading.Thread(target=spotify_list)
+            spotify_list_thread.start()
+
+            await self.change_presence(activity=discord.Game(name="https://github.com/mbledek"))
+
+            # Start music at round hours
+            while True:
+                if 0 <= date.today().weekday() <= 4 and 10 <= datetime.now().hour <= 12 and datetime.now().minute == 1:
+                    try:
+                        queue_random(default_playlist, count=5)
+                        await asyncio.sleep(5)
+                        skip_song()
+                    except spotipy.exceptions.SpotifyException:
+                        logger.error("Aplikacja Spotify jest wyłączona")
+
+                await asyncio.sleep(45)
 
 
 Radiowezel()
