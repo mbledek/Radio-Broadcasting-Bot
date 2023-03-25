@@ -32,7 +32,8 @@ def get_current_id():
             if devices["devices"][i]['is_active']:
                 return devices["devices"][i]['id']
 
-            elif not devices["devices"][i]['is_active']:
+        for i in range(len(devices["devices"])):
+            if not devices["devices"][i]['is_active']:
                 return devices["devices"][i]['id']
 
     return
@@ -189,3 +190,15 @@ def new_recommended_playlist(genres: str, explicit: bool):
     # Print the link to the new playlist on Spotify
     playlist_link = f"https://open.spotify.com/playlist/{new_playlist['id']}"
     return f"View the new playlist at: {playlist_link}"
+
+
+def skip_song():
+    try:
+        sp.next_track(get_current_id())
+        return "Pominąłem!"
+    except spotipy.exceptions.SpotifyException:
+        return "Wystąpił błąd..."
+
+
+def explicit_or_not(track_id):
+    return sp.track(track_id)['explicit']
