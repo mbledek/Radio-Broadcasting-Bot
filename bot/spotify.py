@@ -189,7 +189,12 @@ def new_recommended_playlist(genres: str, explicit: bool):
 
     # Print the link to the new playlist on Spotify
     playlist_link = f"https://open.spotify.com/playlist/{new_playlist['id']}"
-    return f"View the new playlist at: {playlist_link}"
+    if length > 0:
+        return f"Oto link do playlisty: {playlist_link}"
+    else:
+        time.sleep(3)
+        sp.current_user_unfollow_playlist(new_playlist['id'])
+        return "Spróbuj zmienić swoje hasła, Spotify zwrócił mi pustą playlistę"
 
 
 def skip_song():
