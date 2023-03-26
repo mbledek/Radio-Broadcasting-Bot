@@ -7,7 +7,7 @@ Here's a list of all of its commands:
  - `/lista` - shows what was played since launch of the bot
  - `/dodaj <id>` - adds a song to queue (given that you're an admin)
  - `/zestawienie <timespan>` - shows top 10 tracks in a given timespan
- - `/losowe` - adds 3 random songs from a playlist
+ - `/losowe <id>` - adds 3 random songs from a playlist
  - `/clear` - clears the list of today's played tracks
  - `/szukaj <query>` - adds a song to queue as a search by name (given that you're an admin)
  - `/playlista <gatunki> <explicit>` - creates a playlist from given genres
