@@ -29,14 +29,19 @@ class Radiowezel(commands.Bot, ABC):
             await self.change_presence(activity=discord.Game(name="https://github.com/mbledek"))
 
             # Start music at round hours
+            played = False
             while True:
-                if 0 <= date.today().weekday() <= 4 and 10 <= datetime.now().hour <= 12 and datetime.now().minute == 1:
-                    try:
-                        queue_random(default_playlist, count=5)
-                        await asyncio.sleep(5)
-                        skip_song()
-                    except spotipy.exceptions.SpotifyException:
-                        logger.error("Aplikacja Spotify jest wyłączona")
+                if 0 <= date.today().weekday() <= 4:
+                    if 10 <= datetime.now().hour <= 12 and datetime.now().minute == 1 and not played:
+                        try:
+                            queue_random(default_playlist, count=5)
+                            await asyncio.sleep(5)
+                            skip_song()
+                            played = True
+                        except spotipy.exceptions.SpotifyException:
+                            logger.error("Aplikacja Spotify jest wyłączona")
+                    elif 10 <= datetime.now().hour <= 12 and datetime.now().minute == 2 and played:
+                        played = False
 
                 await asyncio.sleep(45)
 
