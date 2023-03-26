@@ -128,7 +128,9 @@ class Radio(commands.Cog):
     
     @commands.slash_command(description="Wyślij nam propozycję piosenki")
     async def propozycja(self, ctx,
-                         query: discord.Option(str, "Tytuł (i najlepiej wykonawca) piosenki którą chcesz dodać")):
+                         query: discord.Option(str, "Tytuł (i najlepiej wykonawca) piosenki którą chcesz dodać"),
+                         dedykacja: discord.Option(str, "Dla kogo chcesz zadedykować?", required=False, default="")):
+        
         odpowiedz = await ctx.response.send_message("Czekaj sekundę...")
 
         track_info, id_list = search_tracks(query)
@@ -151,6 +153,10 @@ class Radio(commands.Cog):
             track_info = f"{track_info} - Explicit"
         output = f"**Propozycja od {ctx.author.mention}:** {track_info} - " \
                  f"https://open.spotify.com/track/{id_list[int(int(wanted_index)-1)]}"
+
+        if not dedykacja == "":
+            output = f"{output}\n - Dedykacja dla: **{dedykacja}**"
+
         await ctx.channel.send("Dzięki, już przesłałem moderacji")
         await self.bot.get_channel(proposition_channel).send(output)
 
