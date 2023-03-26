@@ -4,7 +4,7 @@ A simple Discord bot used to handle school's broadcasting system
 # Usage:
 Here's a list of all of its commands:
  - `/grane` - shows what's currently playing
- - `/lista` - shows what what played since launch of the bot
+ - `/lista` - shows what was played since launch of the bot
  - `/dodaj <id>` - adds a song to queue (given that you're an admin)
  - `/zestawienie <timespan>` - shows top 10 tracks in a given timespan
  - `/losowe` - adds 3 random songs from a playlist
