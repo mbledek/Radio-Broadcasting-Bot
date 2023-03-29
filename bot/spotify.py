@@ -54,7 +54,7 @@ def current_playing():
         return ""
 
 
-def queue_random(id="0jH70qZn1b4pBva0Xj0rk6"):
+def queue_random(id, count=3):
     tracks = "**Dodałem:**\n"
     playlist = sp.playlist(id)
     length = len(playlist["tracks"]["items"])
@@ -63,7 +63,7 @@ def queue_random(id="0jH70qZn1b4pBva0Xj0rk6"):
         id_list = pickle.load(f)
     if id_list in ["", None, []]:
         id_list = []
-    for i in range(3):
+    for i in range(count):
         number = random.randint(0, length - 1)
         now_id = playlist["tracks"]["items"][number]["track"]["id"]
         now = time.perf_counter()
