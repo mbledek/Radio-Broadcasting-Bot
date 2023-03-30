@@ -9,7 +9,7 @@ from datetime import datetime, date
 
 from bot.radiowezel import Radio
 from bot.config import TOKEN, default_playlist
-from bot.spotify import spotify_list, queue_random, skip_song
+from bot.spotify import spotify_list, queue_random, skip_song, volume_lowerer
 
 
 class Radiowezel(commands.Bot, ABC):
@@ -45,6 +45,9 @@ class Radiowezel(commands.Bot, ABC):
                         logger.error("Aplikacja Spotify jest wyłączona")
                 elif 10 <= datetime.now().hour <= 12 and datetime.now().minute == 2 and played:
                     played = False
+
+                elif 10 <= datetime.now().hour <= 12 and datetime.now().minute == 15:
+                    volume_lowerer()
 
             await asyncio.sleep(45)
 
