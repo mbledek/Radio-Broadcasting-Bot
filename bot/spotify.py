@@ -58,6 +58,9 @@ def queue_random(id, count=3):
     tracks = "**Dodałem:**\n"
     playlist = sp.playlist(id)
     length = len(playlist["tracks"]["items"])
+    device = get_current_id()
+    if device is not None:
+        sp.volume(default_volume, device)
 
     with open(os.path.join(path, "Spotify_list.pkl"), "rb") as f:
         id_list = pickle.load(f)
@@ -102,6 +105,9 @@ def top_100(count=100, timespan="short_term"):
 
 
 def queue_id(id):
+    device = get_current_id()
+    if device is not None:
+        sp.volume(default_volume, device)
     sp.add_to_queue(id)
     track = sp.track(id)
     artist = track["album"]["artists"][0]["name"]
@@ -154,7 +160,7 @@ def divide_chunks(list, length):
 
 
 def new_recommended_playlist(genres: str, explicit: bool):
-    playlist_name = genres
+    playlist_name = f"{datetime.now().strftime('%d.%m')} - {genres}"
     genres = genres.split(", ")
     track_ids = []
 
@@ -183,6 +189,7 @@ def new_recommended_playlist(genres: str, explicit: bool):
     track_ids = divide_chunks(track_ids, 50)
     for item in track_ids:
         sp.playlist_add_items(new_playlist["id"], item)
+        time.sleep(2)
 
     # Print the number of tracks in the playlist
     print(f"Generated playlist with {length} tracks")
@@ -207,3 +214,34 @@ def skip_song():
 
 def explicit_or_not(track_id):
     return sp.track(track_id)['explicit']
+
+
+def get_current_volume():
+    devices = sp.devices()
+
+    if len(devices["devices"]) > 0:
+        if devices["devices"][0]["is_active"] is True:
+            return devices["devices"][0]["volume_percent"]
+
+    return None
+
+
+def volume_lowerer():
+    volume = 100
+    while volume > 1:
+        volume = get_current_volume()
+        # print(volume)
+        if volume is not None:
+            if volume > 50:
+                volume = volume - 2
+                device = get_current_id()
+                if device is not None:
+                    sp.volume(volume, device)
+            elif 50 >= volume:
+                volume = volume - 1
+                device = get_current_id()
+                if device is not None:
+                    sp.volume(volume, device)
+
+        time.sleep(2.5)
+
