@@ -1,4 +1,5 @@
 import asyncio
+import os.path
 from abc import ABC
 import threading
 import discord
@@ -6,10 +7,14 @@ import spotipy
 from discord.ext import commands
 from logzero import logfile, logger
 from datetime import datetime, date
+import pathlib
+import pickle
 
 from bot.radiowezel import Radio
 from bot.config import TOKEN, default_playlist
 from bot.spotify import spotify_list, queue_random, skip_song, volume_lowerer
+
+path = pathlib.Path(__file__).parent.absolute()
 
 
 class Radiowezel(commands.Bot, ABC):
@@ -48,6 +53,14 @@ class Radiowezel(commands.Bot, ABC):
 
                 elif 10 <= datetime.now().hour <= 12 and datetime.now().minute == 15:
                     volume_lowerer()
+
+                elif datetime.now().hour == 23 and datetime.now().minute == 59:
+                    with open(os.path.join(path, "bot", "Spotify_list.pkl"), "wb") as f:
+                        pickle.dump([], f)
+            elif date.today().weekday() == 6:
+                if datetime.now().hour == 23 and datetime.now().minute == 59:
+                    with open(os.path.join(path, "bot", "Spotify_list_weekly.pkl"), "wb") as f:
+                        pickle.dump([], f)
 
             await asyncio.sleep(45)
 
