@@ -39,7 +39,7 @@ def get_current_id():
             if not devices["devices"][i]['is_active']:
                 return devices["devices"][i]['id']
 
-    return
+    return None
 
 
 def current_playing():
@@ -81,8 +81,12 @@ def queue_random(id, count=3):
                 break
         tracks = f'{tracks}{playlist["tracks"]["items"][number]["track"]["album"]["artists"][0]["name"]} -' \
                  f' {playlist["tracks"]["items"][number]["track"]["name"]}\n'
-        id_list.append(now_id)
-        sp.add_to_queue(now_id)
+        try:
+            if device is not None:
+                sp.add_to_queue(now_id)
+                id_list.append(now_id)
+        except spotipy.exceptions.SpotifyException:
+            print("Wystąpił błąd...")
     with open(os.path.join(path, "Spotify_list_weekly.pkl"), "wb") as f:
         pickle.dump(id_list, f)
 
@@ -110,13 +114,18 @@ def top_100(count=100, timespan="short_term"):
 def queue_id(id):
     device = get_current_id()
     if device is not None:
-        sp.volume(default_volume, device)
-    sp.add_to_queue(id)
-    track = sp.track(id)
-    artist = track["album"]["artists"][0]["name"]
-    track_name = track["name"]
+        try:
+            sp.volume(default_volume, device)
+            sp.add_to_queue(id)
+            track = sp.track(id)
+            artist = track["album"]["artists"][0]["name"]
+            track_name = track["name"]
 
-    return f"{artist} - {track_name}"
+            return f"{artist} - {track_name}"
+        except spotipy.exceptions.SpotifyException:
+            return "Wystąpił bład..."
+
+    return "Wystąpił błąd..."
 
 
 def spotify_list():
@@ -130,24 +139,24 @@ def spotify_list():
 
             if len(songs_list) > 0:
                 if songs_list[-1][1] != song:
-                    # print(song)
+                    print(song)
                     songs_list.append([datetime.now().strftime("%H:%M"), song])
                     with open(os.path.join(path, "Spotify_list.pkl"), "wb") as f:
                         pickle.dump(songs_list, f)
             else:
-                # print(song)
+                print(song)
                 songs_list.append([datetime.now().strftime("%H:%M"), song])
                 with open(os.path.join(path, "Spotify_list.pkl"), "wb") as f:
                     pickle.dump(songs_list, f)
 
             if len(songs_list_weekly) > 0:
                 if songs_list_weekly[-1][1] != song:
-                    print(song)
+                    # print(song)
                     songs_list_weekly.append([datetime.now().strftime("%H:%M"), song])
                     with open(os.path.join(path, "Spotify_list_weekly.pkl"), "wb") as f:
                         pickle.dump(songs_list_weekly, f)
             else:
-                print(song)
+                # print(song)
                 songs_list_weekly.append([datetime.now().strftime("%H:%M"), song])
                 with open(os.path.join(path, "Spotify_list_weekly.pkl"), "wb") as f:
                     pickle.dump(songs_list_weekly, f)
@@ -237,30 +246,32 @@ def get_current_volume():
     devices = sp.devices()
 
     if len(devices["devices"]) > 0:
-        if devices["devices"][0]["is_active"] is True:
-            return devices["devices"][0]["volume_percent"]
+        for i in range(len(devices["devices"])):
+            if devices["devices"][i]["is_active"] is True:
+                return devices["devices"][i]["volume_percent"]
 
     return None
 
 
 def volume_lowerer():
     volume = 100
-    while volume > 1:
+    while volume > 25:
         volume = get_current_volume()
-        # print(volume)
+
         if volume is not None:
             if volume > 50:
+                volume = volume - 3
+                device = get_current_id()
+                if device is not None:
+                    sp.volume(volume, device)
+                time.sleep(1)
+            elif 50 >= volume:
                 volume = volume - 2
                 device = get_current_id()
                 if device is not None:
                     sp.volume(volume, device)
-            elif 50 >= volume:
-                volume = volume - 1
-                device = get_current_id()
-                if device is not None:
-                    sp.volume(volume, device)
 
-        time.sleep(2.5)
+        time.sleep(1)
 
 
 def stop_music():
