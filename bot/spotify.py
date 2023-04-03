@@ -22,6 +22,9 @@ sp = spotipy.Spotify(auth_manager=SpotifyOAuth(client_id=SPOTIPY_CLIENT_ID,
 
 with open(os.path.join(path, "Spotify_list.pkl"), "wb") as f:
     pickle.dump([], f)
+if not os.path.isfile(os.path.join(path, "Spotify_list_weekly.pkl")):
+    with open(os.path.join(path, "Spotify_list_weekly.pkl"), "wb") as f:
+        pickle.dump([], f)
 
 
 def get_current_id():
@@ -62,7 +65,7 @@ def queue_random(id, count=3):
     if device is not None:
         sp.volume(default_volume, device)
 
-    with open(os.path.join(path, "Spotify_list.pkl"), "rb") as f:
+    with open(os.path.join(path, "Spotify_list_weekly.pkl"), "rb") as f:
         id_list = pickle.load(f)
     if id_list in ["", None, []]:
         id_list = []
@@ -80,7 +83,7 @@ def queue_random(id, count=3):
                  f' {playlist["tracks"]["items"][number]["track"]["name"]}\n'
         id_list.append(now_id)
         sp.add_to_queue(now_id)
-    with open(os.path.join(path, "Spotify_list.pkl"), "wb") as f:
+    with open(os.path.join(path, "Spotify_list_weekly.pkl"), "wb") as f:
         pickle.dump(id_list, f)
 
     return tracks
@@ -117,24 +120,38 @@ def queue_id(id):
 
 
 def spotify_list():
-    with open(os.path.join(path, "Spotify_list.pkl"), "wb") as f:
-        pickle.dump([], f)
     while True:
         song = current_playing()
         if song != "":
             with open(os.path.join(path, "Spotify_list.pkl"), "rb") as f:
                 songs_list = pickle.load(f)
+            with open(os.path.join(path, "Spotify_list_weekly.pkl"), "rb") as f:
+                songs_list_weekly = pickle.load(f)
+
             if len(songs_list) > 0:
                 if songs_list[-1][1] != song:
-                    print(song)
+                    # print(song)
                     songs_list.append([datetime.now().strftime("%H:%M"), song])
                     with open(os.path.join(path, "Spotify_list.pkl"), "wb") as f:
                         pickle.dump(songs_list, f)
             else:
-                print(song)
+                # print(song)
                 songs_list.append([datetime.now().strftime("%H:%M"), song])
                 with open(os.path.join(path, "Spotify_list.pkl"), "wb") as f:
                     pickle.dump(songs_list, f)
+
+            if len(songs_list_weekly) > 0:
+                if songs_list_weekly[-1][1] != song:
+                    print(song)
+                    songs_list_weekly.append([datetime.now().strftime("%H:%M"), song])
+                    with open(os.path.join(path, "Spotify_list_weekly.pkl"), "wb") as f:
+                        pickle.dump(songs_list_weekly, f)
+            else:
+                print(song)
+                songs_list_weekly.append([datetime.now().strftime("%H:%M"), song])
+                with open(os.path.join(path, "Spotify_list_weekly.pkl"), "wb") as f:
+                    pickle.dump(songs_list_weekly, f)
+
         time.sleep(30)
 
 
@@ -245,3 +262,10 @@ def volume_lowerer():
 
         time.sleep(2.5)
 
+
+def stop_music():
+    try:
+        sp.pause_playback(get_current_id())
+        return "Zatrzymałem!"
+    except spotipy.exceptions.SpotifyException:
+        return "Wystąpił błąd..."
