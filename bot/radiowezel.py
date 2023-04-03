@@ -25,9 +25,14 @@ class Radio(commands.Cog):
             await ctx.response.send_message(f"Sorry, nasz Spotify jest wyłączony...")
 
     @commands.slash_command(description="Sprawdź co dzisiaj graliśmy")
-    async def lista(self, ctx):
-        with open(os.path.join(path, "Spotify_list.pkl"), "rb") as f:
-            songs_list = pickle.load(f)
+    async def lista(self, ctx,
+                    timespan: discord.Option(str, "Dzisiaj czy w tym tygodniu?", choices=["today", "weekly"])):
+        if timespan == "today":
+            with open(os.path.join(path, "Spotify_list.pkl"), "rb") as f:
+                songs_list = pickle.load(f)
+        else:
+            with open(os.path.join(path, "Spotify_list_weekly.pkl"), "rb") as f:
+                songs_list = pickle.load(f)
 
         if len(songs_list) > 0:
             odpowiedz = await ctx.response.send_message("Czekaj sekundę...")
@@ -37,7 +42,10 @@ class Radio(commands.Cog):
                     final = f"{final}{item[0]} - {item[1]}\n"
 
             final = split_str(final, 1900)
-            await odpowiedz.edit_original_response(content="**Dzisiaj zagraliśmy:**")
+            if timespan == "today":
+                await odpowiedz.edit_original_response(content="**Dzisiaj zagraliśmy:**")
+            else:
+                await odpowiedz.edit_original_response(content="**Ostatnio zagraliśmy:**")
             for item in final:
                 await ctx.channel.send(item)
         else:
@@ -66,7 +74,7 @@ class Radio(commands.Cog):
     @commands.slash_command(description="Dodaj 3 losowe piosenki z naszej playlisty")
     async def losowe(self, ctx,
                      id: discord.Option(str, "ID lub link playlisty z której chcesz dodać 3 piosenki", required=False,
-                                        default="2Jlz3GhvPnf3z9v86EYWLR")):
+                                        default=default_playlist)):
         if admin_role not in list(map(lambda x: x.id, ctx.user.roles)):
             await ctx.response.send_message(content="Nie masz uprawnień do użycia tej komendy!", ephemeral=True)
         else:
@@ -78,14 +86,18 @@ class Radio(commands.Cog):
                 await ctx.response.send_message(f"Sorry, nasz Spotify jest wyłączony...")
 
     @commands.slash_command(description="Wyczyść listę dzisiaj zagranych")
-    async def clear(self, ctx):
+    async def wyczysc(self, ctx,
+                    timespan: discord.Option(str, "Dzisiaj czy w tym tygodniu?", choices=["today", "weekly"])):
         if admin_role not in list(map(lambda x: x.id, ctx.user.roles)):
             await ctx.response.send_message(content="Nie masz uprawnień do użycia tej komendy!", ephemeral=True)
         else:
             await ctx.response.send_message(content="Już czyszczę...", ephemeral=True)
-
-            with open(os.path.join(path, "Spotify_list.pkl"), "wb") as f:
-                pickle.dump([], f)
+            if timespan == "today":
+                with open(os.path.join(path, "Spotify_list.pkl"), "wb") as f:
+                    pickle.dump([], f)
+            else:
+                with open(os.path.join(path, "Spotify_list_weekly.pkl"), "wb") as f:
+                    pickle.dump([], f)
 
     @commands.slash_command(description="Dodaj piosenkę do kolejki, wyszukując ją po jej nazwie")
     async def szukaj(self, ctx,
@@ -110,8 +122,11 @@ class Radio(commands.Cog):
                 await ctx.channel.send("Timed out... Please start the process again")
                 return
 
-            await ctx.channel.send("Dzięki, już dodaję...")
-            queue_id(id_list[int(int(wanted_index)-1)])
+            try:
+                await ctx.channel.send("Dzięki, już dodaję...")
+                queue_id(id_list[int(int(wanted_index)-1)])
+            except spotipy.exceptions.SpotifyException:
+                await ctx.channel.send(f"Sorry, nasz Spotify jest wyłączony...")
 
     @commands.slash_command(description="Stwórz playlistę z danych gatunków")
     async def playlista(self, ctx,
@@ -125,12 +140,12 @@ class Radio(commands.Cog):
             link = new_recommended_playlist(gatunki, explicit)
 
             await odpowiedz.edit_original_response(content=link)
-    
+
     @commands.slash_command(description="Wyślij nam propozycję piosenki")
     async def propozycja(self, ctx,
                          query: discord.Option(str, "Tytuł (i najlepiej wykonawca) piosenki którą chcesz dodać"),
                          dedykacja: discord.Option(str, "Dla kogo chcesz zadedykować?", required=False, default="")):
-        
+
         odpowiedz = await ctx.response.send_message("Czekaj sekundę...")
 
         track_info, id_list = search_tracks(query)
@@ -168,3 +183,12 @@ class Radio(commands.Cog):
             odpowiedz = await ctx.response.send_message("Czekaj sekundę...")
 
             await odpowiedz.edit_original_response(content=skip_song())
+
+    @commands.slash_command(description="Zatrzymaj muzykę")
+    async def stop(self, ctx):
+        if admin_role not in list(map(lambda x: x.id, ctx.user.roles)):
+            await ctx.response.send_message(content="Nie masz uprawnień do użycia tej komendy!", ephemeral=True)
+        else:
+            odpowiedz = await ctx.response.send_message("Czekaj sekundę...")
+
+            await odpowiedz.edit_original_response(content=stop_music())
