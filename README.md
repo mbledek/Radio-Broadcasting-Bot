@@ -13,6 +13,7 @@ Here's a list of all of its commands:
  - `/playlista <gatunki> <explicit>` - creates a playlist from given genres
 - `/propozycja <query> <dedykacja>` - send a proposition of a song to admins
 - `/pomin` - skips a song (given that you're an admin)
+- `/stop` - stops playback (given that you're an admin)
  
  # Configuration
  Remember to edit the config.py file:
@@ -21,4 +22,5 @@ Here's a list of all of its commands:
  - admin_role is the ID of an admin role from your server
  - proposition_channel is the ID of the channel to which propositions will be sent
  - default_playlist is the link to a spotify playlist from which the bot will add random songs (/losowe)
+ - default_volume is the percentage of volume that the bot will automatically set when starting playback
 
