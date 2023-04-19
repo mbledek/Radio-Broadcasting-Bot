@@ -77,7 +77,7 @@ def queue_random(id, count=3):
         while now_id in id_list:
             number = random.randint(0, length - 1)
             now_id = playlist["tracks"]["items"][number]["track"]["id"]
-            if time.perf_counter() - now > 3:
+            if time.perf_counter() - now > 7:
                 break
         tracks = f'{tracks}{playlist["tracks"]["items"][number]["track"]["album"]["artists"][0]["name"]} -' \
                  f' {playlist["tracks"]["items"][number]["track"]["name"]}\n'
