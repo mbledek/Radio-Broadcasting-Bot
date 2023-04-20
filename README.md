@@ -14,6 +14,7 @@ Here's a list of all of its commands:
 - `/propozycja <query> <dedykacja>` - send a proposition of a song to admins
 - `/pomin` - skips a song (given that you're an admin)
 - `/stop` - stops playback (given that you're an admin)
+- `/przerwa <godzina>` - starts a thread to manage a break at a given hour
  
  # Configuration
  Remember to edit the config.py file:
