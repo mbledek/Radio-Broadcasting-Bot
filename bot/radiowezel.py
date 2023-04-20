@@ -1,7 +1,7 @@
 import asyncio
+import threading
 
 import discord
-from logzero import logger
 from discord.ext import commands
 from .spotify import *
 from .converters import *
@@ -192,3 +192,19 @@ class Radio(commands.Cog):
             odpowiedz = await ctx.response.send_message("Czekaj sekundę...")
 
             await odpowiedz.edit_original_response(content=stop_music())
+
+    @commands.slash_command(description="Zapusc muzykę na danej przerwie")
+    async def przerwa(self, ctx,
+                      godzina: discord.Option(int, "Godzina o której mam puszczać muzykę")):
+        if admin_role not in list(map(lambda x: x.id, ctx.user.roles)):
+            await ctx.response.send_message(content="Nie masz uprawnień do użycia tej komendy!", ephemeral=True)
+        else:
+            if (datetime.now().hour < godzina <= 23) or (datetime.now().hour == godzina and datetime.now().minute <= 15):
+                odpowiedz = await ctx.response.send_message("Czekaj sekundę...")
+
+                breakthread = threading.Thread(target=break_thread, args=(godzina,))
+                breakthread.start()
+
+                await odpowiedz.edit_original_response(content=f"Zaplanowana przerwa o godzinie: {godzina}")
+            else:
+                await ctx.response.send_message("Błędna godzina...", ephemeral=True)
