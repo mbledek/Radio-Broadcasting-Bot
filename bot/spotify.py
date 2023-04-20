@@ -1,15 +1,10 @@
-import os
 import time
 import spotipy
 from spotipy.oauth2 import SpotifyOAuth
 import random
 import pickle
 from datetime import datetime
-import pathlib
-
 from .config import *
-
-path = pathlib.Path(__file__).parent.absolute()
 
 scopes = "app-remote-control user-modify-playback-state user-read-playback-state streaming user-top-read"
 
@@ -39,7 +34,7 @@ def get_current_id():
             if not devices["devices"][i]['is_active']:
                 return devices["devices"][i]['id']
 
-    return None
+    return
 
 
 def current_playing():
@@ -57,38 +52,51 @@ def current_playing():
         return ""
 
 
-def queue_random(id, count=3):
+def queue_random(id, count=7):
     tracks = "**Dodałem:**\n"
     playlist = sp.playlist(id)
-    length = len(playlist["tracks"]["items"])
+    songs = playlist["tracks"]["items"]
+
     device = get_current_id()
     if device is not None:
-        sp.volume(default_volume, device)
+        try:
+            sp.volume(default_volume, device)
+        except spotipy.exceptions.SpotifyException:
+            print("Aplikacja Spotify jest wyłączona")
 
     with open(os.path.join(path, "Spotify_list_weekly.pkl"), "rb") as f:
-        id_list = pickle.load(f)
+        played_list = pickle.load(f)
+    id_list = []
+    for i in range(len(played_list)):
+        id_list.append(played_list[i][1])
     if id_list in ["", None, []]:
         id_list = []
     for i in range(count):
-        number = random.randint(0, length - 1)
-        now_id = playlist["tracks"]["items"][number]["track"]["id"]
+        random.shuffle(songs)
+        number = random.randint(0, len(songs) - 1)
+        now_id = songs[number]["track"]["name"]
         now = time.perf_counter()
 
         while now_id in id_list:
-            number = random.randint(0, length - 1)
-            now_id = playlist["tracks"]["items"][number]["track"]["id"]
-            if time.perf_counter() - now > 7:
+            number = random.randint(0, len(songs) - 1)
+            now_id = songs[number]["track"]["name"]
+            if time.perf_counter() - now > 10:
                 break
-        tracks = f'{tracks}{playlist["tracks"]["items"][number]["track"]["album"]["artists"][0]["name"]} -' \
-                 f' {playlist["tracks"]["items"][number]["track"]["name"]}\n'
+
+        artist = songs[number]["track"]["album"]["artists"]
+        for i in range(len(artist)):
+            artist[i] = artist[i]["name"]
+        artist = ", ".join(artist) + ": "
+
+        tracks = f'{tracks}{artist} - {now_id}\n'
         try:
-            if device is not None:
-                sp.add_to_queue(now_id)
-                id_list.append(now_id)
+            sp.add_to_queue(songs[number]["track"]["id"], device)
+            played_list.append([datetime.now().strftime("%H:%M"), f"{artist} - {now_id}"])
+            id_list.append(f"{artist} - {now_id}")
         except spotipy.exceptions.SpotifyException:
-            print("Wystąpił błąd...")
+            print("Aplikacja Spotify jest wyłączona")
     with open(os.path.join(path, "Spotify_list_weekly.pkl"), "wb") as f:
-        pickle.dump(id_list, f)
+        pickle.dump(played_list, f)
 
     return tracks
 
@@ -117,15 +125,13 @@ def queue_id(id):
         try:
             sp.volume(default_volume, device)
             sp.add_to_queue(id)
-            track = sp.track(id)
-            artist = track["album"]["artists"][0]["name"]
-            track_name = track["name"]
-
-            return f"{artist} - {track_name}"
         except spotipy.exceptions.SpotifyException:
-            return "Wystąpił bład..."
+             print("Aplikacja Spotify jest wyłączona")
+    track = sp.track(id)
+    artist = track["album"]["artists"][0]["name"]
+    track_name = track["name"]
 
-    return "Wystąpił błąd..."
+    return f"{artist} - {track_name}"
 
 
 def spotify_list():
@@ -139,24 +145,24 @@ def spotify_list():
 
             if len(songs_list) > 0:
                 if songs_list[-1][1] != song:
-                    print(song)
+                    # print(song)
                     songs_list.append([datetime.now().strftime("%H:%M"), song])
                     with open(os.path.join(path, "Spotify_list.pkl"), "wb") as f:
                         pickle.dump(songs_list, f)
             else:
-                print(song)
+                # print(song)
                 songs_list.append([datetime.now().strftime("%H:%M"), song])
                 with open(os.path.join(path, "Spotify_list.pkl"), "wb") as f:
                     pickle.dump(songs_list, f)
 
             if len(songs_list_weekly) > 0:
                 if songs_list_weekly[-1][1] != song:
-                    # print(song)
+                    print(song)
                     songs_list_weekly.append([datetime.now().strftime("%H:%M"), song])
                     with open(os.path.join(path, "Spotify_list_weekly.pkl"), "wb") as f:
                         pickle.dump(songs_list_weekly, f)
             else:
-                # print(song)
+                print(song)
                 songs_list_weekly.append([datetime.now().strftime("%H:%M"), song])
                 with open(os.path.join(path, "Spotify_list_weekly.pkl"), "wb") as f:
                     pickle.dump(songs_list_weekly, f)
@@ -253,30 +259,56 @@ def get_current_volume():
     return None
 
 
-def volume_lowerer():
-    volume = 100
-    while volume > 25:
-        volume = get_current_volume()
-
-        if volume is not None:
-            if volume > 50:
-                volume = volume - 3
-                device = get_current_id()
-                if device is not None:
-                    sp.volume(volume, device)
-                time.sleep(1)
-            elif 50 >= volume:
-                volume = volume - 2
-                device = get_current_id()
-                if device is not None:
-                    sp.volume(volume, device)
-
-        time.sleep(1)
-
-
 def stop_music():
     try:
         sp.pause_playback(get_current_id())
         return "Zatrzymałem!"
     except spotipy.exceptions.SpotifyException:
         return "Wystąpił błąd..."
+
+
+def volume_lowerer():
+    logger.info("Starting to lower volume")
+    volume = 100
+    while volume > 25:
+        volume = get_current_volume()
+        # print(volume)
+        if volume is not None:
+            if volume > 50:
+                volume = volume - 3
+                device = get_current_id()
+                # print(device)
+                if device is not None:
+                    sp.volume(volume, device)
+                time.sleep(1)
+            elif 50 >= volume:
+                volume = volume - 2
+                device = get_current_id()
+                # print(device)
+                if device is not None:
+                    sp.volume(volume, device)
+
+        time.sleep(1)
+    stop_music()
+    logger.info("Volume lowered")
+
+
+def break_thread(hour: int):
+    played = False
+    if datetime.now().hour <= hour and datetime.now().minute <= 15:
+        while True:
+            if datetime.now().hour == hour and datetime.now().minute == 1 and not played:
+                logger.info(f"Preparing playback for {hour} hour")
+                try:
+                    queue_random(default_playlist, count=5)
+                    time.sleep(5)
+                    skip_song()
+                    played = True
+                except spotipy.exceptions.SpotifyException:
+                    logger.error("Aplikacja Spotify jest wyłączona")
+
+            elif datetime.now().hour == hour and datetime.now().minute == 15:
+                volume_lowerer()
+                break
+
+            time.sleep(30)
