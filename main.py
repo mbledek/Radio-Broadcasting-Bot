@@ -5,13 +5,13 @@ import threading
 import discord
 import spotipy
 from discord.ext import commands
-from logzero import logfile, logger
+
 from datetime import datetime, date
 import pathlib
 import pickle
 
 from bot.radiowezel import Radio
-from bot.config import TOKEN, default_playlist
+from bot.config import TOKEN, default_playlist, logger
 from bot.spotify import spotify_list, queue_random, skip_song, volume_lowerer
 
 path = pathlib.Path(__file__).parent.absolute()
@@ -25,7 +25,7 @@ class Radiowezel(commands.Bot, ABC):
         )
 
         self.remove_command('help')
-        logfile("radiowezel.log", encoding='UTF-8')
+
         self.add_cog(Radio(self))
         self.run(TOKEN)
 
