@@ -1,3 +1,10 @@
+from logzero import logfile, logger
+import pathlib
+import os
+
+path = pathlib.Path(__file__).parent.absolute()
+logfile(os.path.join(path, "radiowezel.log"), encoding='UTF-8')
+
 TOKEN = ''
 
 SPOTIPY_CLIENT_ID = ''
