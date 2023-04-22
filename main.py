@@ -48,7 +48,7 @@ class Radiowezel(commands.Bot, ABC):
                         played = True
                     except spotipy.exceptions.SpotifyException:
                         logger.error("Aplikacja Spotify jest wyłączona")
-                elif 10 <= datetime.now().hour <= 12 and datetime.now().minute == 2 and played:
+                elif 10 <= datetime.now().hour <= 12 and datetime.now().minute != 1 and played:
                     played = False
 
                 elif 10 <= datetime.now().hour <= 12 and datetime.now().minute == 15:
@@ -62,7 +62,7 @@ class Radiowezel(commands.Bot, ABC):
                     with open(os.path.join(path, "bot", "Spotify_list_weekly.pkl"), "wb") as f:
                         pickle.dump([], f)
 
-            await asyncio.sleep(45)
+            await asyncio.sleep(15)
 
 
 Radiowezel()
