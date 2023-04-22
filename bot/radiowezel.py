@@ -47,7 +47,8 @@ class Radio(commands.Cog):
             else:
                 await odpowiedz.edit_original_response(content="**Ostatnio zagraliśmy:**")
             for item in final:
-                await ctx.channel.send(item)
+                if item not in [[], "", None]:
+                    await ctx.channel.send(item)
         else:
             await ctx.response.send_message("Dzisiaj nie zagraliśmy jeszcze żadnej piosenki", ephemeral=True)
 
