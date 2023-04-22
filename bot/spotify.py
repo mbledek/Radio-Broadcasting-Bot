@@ -52,10 +52,18 @@ def current_playing():
         return ""
 
 
-def queue_random(id, count=7):
+def queue_random(playlist_id, count=7):
     tracks = "**Dodałem:**\n"
-    playlist = sp.playlist(id)
-    songs = playlist["tracks"]["items"]
+    total_songs = []
+    i = 0
+    while True:
+        playlist = sp.playlist_items(playlist_id, offset=i)
+        songs = playlist["items"]
+        if not songs:
+            break
+        else:
+            total_songs.extend(songs)
+            i = i + 100
 
     device = get_current_id()
     if device is not None:
@@ -72,25 +80,25 @@ def queue_random(id, count=7):
     if id_list in ["", None, []]:
         id_list = []
     for i in range(count):
-        random.shuffle(songs)
-        number = random.randint(0, len(songs) - 1)
-        now_id = songs[number]["track"]["name"]
+        random.shuffle(total_songs)
+        number = random.randint(0, len(total_songs) - 1)
+        now_id = total_songs[number]["track"]["name"]
         now = time.perf_counter()
 
         while now_id in id_list:
-            number = random.randint(0, len(songs) - 1)
-            now_id = songs[number]["track"]["name"]
+            number = random.randint(0, len(total_songs) - 1)
+            now_id = total_songs[number]["track"]["name"]
             if time.perf_counter() - now > 10:
                 break
 
-        artist = songs[number]["track"]["album"]["artists"]
-        for i in range(len(artist)):
-            artist[i] = artist[i]["name"]
+        artist = total_songs[number]["track"]["album"]["artists"]
+        for j in range(len(artist)):
+            artist[j] = artist[j]["name"]
         artist = ", ".join(artist) + ": "
 
         tracks = f'{tracks}{artist} - {now_id}\n'
         try:
-            sp.add_to_queue(songs[number]["track"]["id"], device)
+            sp.add_to_queue(total_songs[number]["track"]["id"], device)
             played_list.append([datetime.now().strftime("%H:%M"), f"{artist} - {now_id}"])
             id_list.append(f"{artist} - {now_id}")
         except spotipy.exceptions.SpotifyException:
@@ -119,15 +127,15 @@ def top_100(count=100, timespan="short_term"):
     return output
 
 
-def queue_id(id):
+def queue_id(track_id):
     device = get_current_id()
     if device is not None:
         try:
             sp.volume(default_volume, device)
-            sp.add_to_queue(id)
+            sp.add_to_queue(track_id)
         except spotipy.exceptions.SpotifyException:
-             print("Aplikacja Spotify jest wyłączona")
-    track = sp.track(id)
+            print("Aplikacja Spotify jest wyłączona")
+    track = sp.track(track_id)
     artist = track["album"]["artists"][0]["name"]
     track_name = track["name"]
 
@@ -185,10 +193,10 @@ def search_tracks(query: str):
     return track_info, id_list
 
 
-def divide_chunks(list, length):
+def divide_chunks(given_list, length):
     # looping till length l
-    for i in range(0, len(list), length):
-        yield list[i:i + length]
+    for i in range(0, len(given_list), length):
+        yield given_list[i:i + length]
 
 
 def new_recommended_playlist(genres: str, explicit: bool):
@@ -211,7 +219,7 @@ def new_recommended_playlist(genres: str, explicit: bool):
     random.shuffle(track_ids)
 
     # Create a new playlist on Spotify
-    playlist_description = "A long playlist of appropriate tracks for schoolwide radio broadcasting"
+    playlist_description = "A long playlist of appropriate tracks for school-wide radio broadcasting"
     user_id = sp.current_user()["id"]
     new_playlist = sp.user_playlist_create(user_id, playlist_name, public=True, description=playlist_description)
     # print(new_playlist['id'])
@@ -295,20 +303,20 @@ def volume_lowerer():
 
 def break_thread(hour: int):
     played = False
-    if datetime.now().hour <= hour and datetime.now().minute <= 15:
-        while True:
-            if datetime.now().hour == hour and datetime.now().minute == 1 and not played:
-                logger.info(f"Preparing playback for {hour} hour")
-                try:
-                    queue_random(default_playlist, count=5)
-                    time.sleep(5)
-                    skip_song()
-                    played = True
-                except spotipy.exceptions.SpotifyException:
-                    logger.error("Aplikacja Spotify jest wyłączona")
+    while True:
+        if datetime.now().hour == hour and datetime.now().minute == 1 and not played:
+            logger.info(f"Preparing playback for {hour} hour")
+            try:
+                queue_random(default_playlist, count=5)
+                time.sleep(5)
+                skip_song()
+                played = True
+            except spotipy.exceptions.SpotifyException:
+                logger.error("Aplikacja Spotify jest wyłączona")
 
-            elif datetime.now().hour == hour and datetime.now().minute == 15:
-                volume_lowerer()
-                break
+        elif datetime.now().hour == hour and datetime.now().minute == 15:
+            volume_lowerer()
+            logger.info(f"Playback for {hour} hour finished")
+            return
 
-            time.sleep(30)
+        time.sleep(15)
